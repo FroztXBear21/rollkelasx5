@@ -1,0 +1,359 @@
+<!doctype html>
+
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sistem Rolling Tempat Duduk 4x4 (32 siswa)</title>
+  <style>
+    :root {
+      --gap: 12px;
+      --desk-w: 140px;
+      --seat-h: 36px;
+      --primary: #0b74de;
+      --primary-dark: #065ea6;
+      --bg-light: #f4f8ff;
+    }
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 18px;
+      color: #111;
+      background: var(--bg-light);
+    }
+    h1 {
+      font-size: 22px;
+      margin: 0 0 10px;
+      color: var(--primary-dark);
+    }
+    .controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    textarea {
+      width: 100%;
+      height: 110px;
+      padding: 8px;
+      font-family: monospace;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 4px rgba(11, 116, 222, 0.5);
+    }
+    .wrap {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .left {
+      flex: 1;
+      min-width: 320px;
+      background: white;
+      padding: 16px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .right {
+      flex: 2;
+      min-width: 320px;
+      background: white;
+      padding: 16px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--gap);
+      margin-top: 10px;
+    }
+    .desk {
+      background: linear-gradient(135deg, #ffffff, #f9fbff);
+      border-radius: 12px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+      transition: transform 0.2s ease;
+    }
+    .desk:hover {
+      transform: translateY(-3px);
+    }
+    .desk .label {
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--primary-dark);
+    }
+    .seats {
+      display: flex;
+      gap: 8px;
+    }
+    .seat {
+      width: calc(var(--desk-w)/2 - 10px);
+      min-width: 100px;
+      height: var(--seat-h);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      background: #e8f3ff;
+      border: 1px solid #cfe6ff;
+      padding: 6px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .footer {
+      margin-top: 12px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    button {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      background: #eee;
+      transition: background 0.2s ease, transform 0.1s ease;
+    }
+    button:hover {
+      background: #ddd;
+      transform: scale(1.03);
+    }
+    button.primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    button.primary:hover {
+      background: var(--primary-dark);
+    }
+    label {
+      font-size: 13px;
+    }
+    .meta {
+      margin-bottom: 10px;
+      color: #444;
+    }
+    .week-indicator {
+      font-weight: 700;
+      color: var(--primary-dark);
+    }
+    .actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .small {
+      font-size: 13px;
+    }
+    .note {
+      font-size: 12px;
+      color: #666;
+      margin-top: 8px;
+    }
+    @media (max-width: 900px) {
+      .wrap { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Sistem Rolling Tempat Duduk — Kelas 4×4 (32 siswa)</h1>
+  <p class="meta">Masukkan daftar 32 nama (satu per baris). Jika kosong, akan diisi otomatis (1..32).</p>  <div class="wrap">
+    <div class="left">
+      <label for="names">Daftar nama (max 32, satu per baris):</label>
+      <textarea id="names" placeholder="Masukkan 32 nama..."></textarea><div class="controls">
+    <button id="fillDefault">Isi default 1..32</button>
+    <button id="randomize">Acak nama</button>
+    <button id="apply" class="primary">Buat Jadwal Rolling</button>
+    <label class="small">hari: <input id="weeks" type="number" min="1" max="52" value="8" style="width:70px;margin-left:6px"/></label>
+  </div>
+
+  <div class="note">Algoritma sederhana: setiap hari meja bergeser (shift meja) dan pasangan bisa berganti dengan menukar kursi dalam meja pada hari ganjil. Kamu bisa mengubah pola pada kode JS bila ingin lawan/aturan lain.</div>
+
+  <div style="margin-top:12px">
+    <button id="downloadCsv">Unduh CSV (semua hari)</button>
+    <button id="printSchedule">Cetak tampilan</button>
+  </div>
+</div>
+
+<div class="right">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <div>
+      <span class="week-indicator">hari <span id="currentWeek">1</span></span>
+      <span style="margin-left:10px;color:#666">(Total hari: <span id="totalWeeks">8</span>)</span>
+    </div>
+    <div class="actions">
+      <button id="prev">◀ Prev</button>
+      <button id="next">Next ▶</button>
+      <button id="gotoRandom">Tampilkan hari Acak</button>
+    </div>
+  </div>
+
+  <div class="grid" id="classGrid" aria-live="polite"></div>
+
+  <div class="footer">
+    <div class="small">Keterangan: tiap kotak meja menampilkan dua nama (kursi kiri & kanan).</div>
+  </div>
+</div>
+
+  </div><script>
+(function(){
+  // Konfigurasi
+  const TOTAL_STUDENTS = 32;
+  const DESKS = 16; // 4x4
+  const ROWS = 4, COLS = 4;
+
+  // Elemen DOM
+  const namesArea = document.getElementById('names');
+  const fillDefaultBtn = document.getElementById('fillDefault');
+  const randomizeBtn = document.getElementById('randomize');
+  const applyBtn = document.getElementById('apply');
+  const weeksInput = document.getElementById('weeks');
+  const currentWeekSpan = document.getElementById('currentWeek');
+  const totalWeeksSpan = document.getElementById('totalWeeks');
+  const grid = document.getElementById('classGrid');
+  const prevBtn = document.getElementById('prev');
+  const nextBtn = document.getElementById('next');
+  const gotoRandomBtn = document.getElementById('gotoRandom');
+  const downloadCsvBtn = document.getElementById('downloadCsv');
+  const printBtn = document.getElementById('printSchedule');
+
+  // State
+  let students = [];
+  let schedule = []; // array hari -> assignments (array length DESKS of [left,right])
+  let currentWeek = 1;
+  let totalWeeks = parseInt(weeksInput.value,10) || 8;
+
+  // Helpers
+  function defaultNames(){
+    const arr=[]; for(let i=1;i<=TOTAL_STUDENTS;i++) arr.push('Siswa '+i);
+    return arr;
+  }
+  function readNames(){
+    const raw = namesArea.value.split('\n').map(s=>s.trim()).filter(s=>s.length>0);
+    if(raw.length===0) return defaultNames();
+    // if fewer than 32, fill rest
+    const arr = raw.slice(0,TOTAL_STUDENTS);
+    while(arr.length<TOTAL_STUDENTS) arr.push('Siswa '+(arr.length+1));
+    return arr;
+  }
+  function shuffle(a){
+    for(let i=a.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [a[i],a[j]]=[a[j],a[i]];
+    }
+  }
+
+  // Buat assignment awal: desk d gets students[2*d], students[2*d+1]
+  function buildInitialAssignments(studentsArr){
+    const assign = new Array(DESKS);
+    for(let d=0;d<DESKS;d++){
+      assign[d]=[studentsArr[2*d], studentsArr[2*d+1]];
+    }
+    return assign;
+  }
+
+  // Algoritma rolling sederhana:
+  // - Untuk hari w (0-based) shift meja by w (mod DESKS)
+  // - Jika w adalah ganjil, swap posisi dalam meja (mengganti pasangan kiri/kanan)
+  function computeSchedule(initialAssign, weeks){
+    const weeksArr = [];
+    for(let w=0; w<weeks; w++){
+      const shift = w % DESKS;
+      const swapFlag = (w % 2) === 1; // swap seats on odd weeks
+      const weekAssign = new Array(DESKS);
+      for(let d=0; d<DESKS; d++){
+        const sourceDesk = (d - shift + DESKS) % DESKS; // siapa yang datang ke desk d
+        const pair = initialAssign[sourceDesk].slice(); // copy
+        if(swapFlag) pair.reverse();
+        weekAssign[d] = pair;
+      }
+      weeksArr.push(weekAssign);
+    }
+    return weeksArr;
+  }
+
+  function renderWeek(w){
+    grid.innerHTML='';
+    const weekIndex = w-1; // 0-based
+    const assign = schedule[weekIndex];
+    for(let r=0;r<ROWS;r++){
+      for(let c=0;c<COLS;c++){
+        const deskIndex = r*COLS + c;
+        const pair = assign[deskIndex];
+        const deskEl = document.createElement('div'); deskEl.className='desk';
+        const label = document.createElement('div'); label.className='label'; label.textContent='Meja '+(deskIndex+1);
+        const seats = document.createElement('div'); seats.className='seats';
+        const left = document.createElement('div'); left.className='seat'; left.textContent=pair[0] || '-';
+        const right = document.createElement('div'); right.className='seat'; right.textContent=pair[1] || '-';
+        seats.appendChild(left); seats.appendChild(right);
+        deskEl.appendChild(label); deskEl.appendChild(seats);
+        grid.appendChild(deskEl);
+      }
+    }
+    currentWeekSpan.textContent = w;
+  }
+
+  function generate(){
+    students = readNames();
+    const initial = buildInitialAssignments(students);
+    totalWeeks = Math.max(1, Math.min(52, parseInt(weeksInput.value,10)||8));
+    schedule = computeSchedule(initial, totalWeeks);
+    document.getElementById('totalWeeks').textContent = totalWeeks;
+    currentWeek = 1;
+    renderWeek(currentWeek);
+  }
+
+  // Event listeners
+  fillDefaultBtn.addEventListener('click', ()=>{
+    namesArea.value = defaultNames().join('\n');
+  });
+  randomizeBtn.addEventListener('click', ()=>{
+    const arr = readNames(); shuffle(arr); namesArea.value = arr.join('\n');
+  });
+  applyBtn.addEventListener('click', ()=>{ generate(); });
+
+  prevBtn.addEventListener('click', ()=>{
+    if(!schedule || schedule.length===0) return;
+    currentWeek = Math.max(1, currentWeek-1); renderWeek(currentWeek);
+  });
+  nextBtn.addEventListener('click', ()=>{
+    if(!schedule || schedule.length===0) return;
+    currentWeek = Math.min(totalWeeks, currentWeek+1); renderWeek(currentWeek);
+  });
+  gotoRandomBtn.addEventListener('click', ()=>{
+    if(!schedule || schedule.length===0) return;
+    const r = Math.floor(Math.random()*totalWeeks)+1; currentWeek = r; renderWeek(currentWeek);
+  });
+
+  downloadCsvBtn.addEventListener('click', ()=>{
+    if(!schedule || schedule.length===0) return alert('Silakan buat jadwal dulu (Klik Buat Jadwal Rolling)');
+    let csv = 'hari,Meja,KursiKiri,KursiKanan\n';
+    schedule.forEach((weekAssign,wIndex)=>{
+      weekAssign.forEach((pair,desk)=>{
+        csv += `${wIndex+1},${desk+1},"${pair[0]}","${pair[1]}"\n`;
+      });
+    });
+    const blob = new Blob([csv], {type:'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'seating_schedule.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  });
+
+  printBtn.addEventListener('click', ()=>{
+    window.print();
+  });
+
+  // Auto-fill default at load
+  namesArea.value = defaultNames().join('\n');
+  // Auto-generate initial schedule
+  generate();
+})();
+</script></body>
+</html>
