@@ -132,7 +132,7 @@
     }
     button {
       padding: 8px 12px;
-      border-radius: 6px;
+      border-radius: 4px;
       border: none;
       cursor: pointer;
       font-weight: 500;
@@ -177,7 +177,7 @@
   </style>
 </head>
 <body>
-  <h1>Sistem Rolling Tempat Duduk X-5 (multiple)</h1>
+  <h1>Sistem Rolling Tempat Duduk X-5</h1>
   <p class="meta">Masukkan daftar 32 nama (satu per baris).</p>
   
   <div class="wrap">
@@ -185,13 +185,19 @@
       <label for="names">Daftar nama (max 32, satu per baris):</label>
       <textarea id="names" placeholder="Masukkan 32 nama..."></textarea>
       <div class="controls">
-        <button id="fillDefault">Isi default 1..32</button>
+        <button id="fillDefault">Isi default</button>
         <button id="randomize">Acak nama</button>
         <button id="apply" class="primary">Rolling</button>
         <label class="small">Hari: <input id="weeks" type="number" min="1" max="52" value="5" style="width:70px;margin-left:6px"/></label>
-      </div>
-      <div class="note">setiap hari meja bergeser dan pasangan bisa berganti pada hari ganjil.</div>
-      </div>
+      <div class="note">
+    Cara menggunakannya:
+    <ol>
+    <li>Mengisi kolom tersebut dengan 32 Nama / Nomor, jika kosong akan otomatis diisi nomor.</li>
+    <li>Menekan tombol <b>Acak</b>, untuk mengacak Nama / Nomor tersebut.</li>
+    <li>Kemudian menekan tombol <b>Rolling</b>, untuk menempatkan Nama / Nomor yang sudah diacak ke meja yang tersedia.</li>
+  </ol>
+</div>
+
     </div>
 
     <div class="right">
